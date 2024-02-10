@@ -1,0 +1,18 @@
+module : segmentation_longitudinal.segmentation_longitudinal.Segmentation
+model :  longitudinal_fc_densenet.LongitudinalFCDenseNet
+dataset : covid_longitudinal.Segmentation2D
+data_root: \\10.23.0.13\polyaxon\data1\jorge_perez\dyndata
+batch_size : 8
+seed: 2334
+log_every_n_steps : 1
+learning_rate : 0.0001
+min_epochs : 30
+max_epochs : 30
+gpus: 1
+checkpoint_metric : Val Mean Dice
+#fast_dev_run: True
+run_test: True # uncomment to run test
+dataset_config: config_patho.yml
+#pretraining_path: /outputs/crogers/context_restoration/experiments/72129/checkpoints/epoch=32-Validation MSE Patch Loss=0.00.ckpt #specify path to pretrained model
+longitudinal: True #uncomment for static runs
+output_path: /outputs/jorge_padilla/covidseg/experiments/

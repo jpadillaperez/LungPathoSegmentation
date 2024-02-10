@@ -1,0 +1,6 @@
+__pycache__/
+output/logs/*
+output/previous_logs/*
+wandb/
+*.pyc
+wandb_api_key.txt
