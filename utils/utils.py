@@ -32,6 +32,30 @@ def inf_loop(data_loader):
     for loader in repeat(data_loader):
         yield from loader
 
+def wandb_config_summary(wandb_config):
+    config_dict = dict(wandb_config)  # Convert to dictionary if it's not already
+    title = "WandbConfigSummary"
+
+    # Calculate the length for pretty printing
+    len_group_var = 55
+    length_filler = len_group_var - len(title)
+    length_filler1 = length_filler - (length_filler // 2)
+    length_filler2 = length_filler - length_filler1
+
+    # Start building the summary string
+    value = f"{'#' * 22}{title}Start{'#' * 22}"
+    value += f"\n{''.join(['-'] * length_filler1)}{title}{''.join(['-'] * length_filler2)}"
+
+    # Iterate over the config dictionary and append each key-value pair to the summary string
+    for key, val in config_dict.items():
+        value += f"\n  {key:<25s}: {str(val):21s}  "
+
+    # End the summary string
+    value += f"\n{'#' * 23}{title}End{'#' * 23}"
+
+    # Print the summary
+    print(value)
+
 
 def argparse_summary(arg_list, parser):
     arg_dict = vars(arg_list)

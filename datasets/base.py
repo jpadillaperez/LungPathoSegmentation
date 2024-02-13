@@ -7,26 +7,26 @@ class Base(l.LightningDataModule):
     def __init__(self, hparams):
         super().__init__()
         self.params = hparams
-        self.output_path = Path(self.params.output_path)
+        self.output_path = Path(self.params["output_path"])
         self.axis_by_plane = {"sagittal": 0, "coronal": 1, "axial": 2}
         self.plane_by_axis = ["sagittal", "coronal", "axial"]
-        self.axis = self.axis_by_plane[self.params.plane]
-        self.batch_size = {phase: self.params.batch_size for phase in ['train', 'test', 'val']}
+        self.axis = self.axis_by_plane[self.params["plane"]]
+        self.batch_size = {phase: self.params["batch_size"] for phase in ['train', 'test', 'val']}
         self.fold_idxs = None
         self.datasets = {}
 
     def prepare_data(self):
         self.preprocessor = DatasetPreprocessor(
-            config_yml_path=Path(self.params.data_root) / self.params.dataset_config,
-            output_path= Path(self.params.data_root),
-            force_preprocessing=self.params.force_preprocessing,
+            config_yml_path=Path(self.params["data_root"]) / self.params["dataset_config"],
+            output_path= Path(self.params["data_root"]),
+            force_preprocessing=self.params["force_preprocessing"],
         )
         #self.preprocessor.export_config(self.output_path / 'dataset')
         self.labels = self.preprocessor.cfg["labels"]
 
         # resolution dataset has been resampled to
         self.resolution = self.preprocessor.setup["resolution"]
-        self.hparams.resolution = self.resolution
+        self.hparams["resolution"] = self.resolution
 
     def get_dataset(self, subset=None, phase=None):
         raise NotImplementedError
@@ -56,7 +56,6 @@ class Base(l.LightningDataModule):
         if stage == 'fit' or stage is None:
             for phase in ['train', 'val']:
                 self.datasets[phase] = self.get_dataset(subset=self.fold_idxs[phase], phase=phase)
-                # xval_path = self.hparams.output_path / 'dataset' / f'xval)'
             self.datasets['all'] = self.get_dataset(phase='test') # TODO maybe remove
         if stage == 'test' or stage is None:
             self.datasets[stage] = self.get_dataset(self.fold_idxs[stage], phase=stage)
@@ -71,7 +70,7 @@ class Base(l.LightningDataModule):
             dataset=self.datasets[phase],
             batch_size=self.batch_size[phase],
             shuffle=(phase=='train' and sampler is None),
-            num_workers=0, #self.hparams.num_workers,
+            num_workers=self.hparams["num_workers"],
             pin_memory=False,
             drop_last=phase=='train',
             sampler=sampler

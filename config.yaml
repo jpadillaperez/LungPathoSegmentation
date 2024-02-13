@@ -1,26 +1,51 @@
-mode: sweep
-#resume_from_checkpoint: /outputs/crogers/context_restoration/experiments/72129/checkpoints/epoch=32-Validation MSE Patch Loss=0.00.ckpt #specify path to pretrained model
-module : segmentation2d.Segmentation2D
-model :  models.fc_densenet.FCDenseNet
-dataset : datasets.covid.Segmentation2D
+#-------------------- Module Configuration --------------------
+module: segmentation2d.Segmentation2D
+#-------------------- Model Configuration --------------------
+model: models.fc_densenet.FCDenseNet
+longitudinal: False
+in_channels: 1
+n_classes: 4
+down_blocks: [4, 4, 4, 4, 4]
+up_blocks: [4, 4, 4, 4, 4]
+bottleneck_layers: 4
+growth_rate: 12
+out_chans_first_conv: 48
+#-------------------- Dataset Configuration --------------------
+data_root: /home/guests/jorge_padilla/data/Longitudinal_Lung_Pathology/dyndata
+dataset: datasets.covid.Segmentation2D
 dataset_config: config_patho.yml
 force_preprocessing: False
-
-batch_size : 8
-n_classes : 4
-seed: 2334
-log_every_n_steps : 1
+plane: "axial"
+drop_pat_ids: []
+#-------------------- Training Configuration --------------------
+run_test: False
+resume_from_checkpoint: null
+log_every_n_steps: 50
+pixel_threshold: 0.025
+overfit_batches: 0.0
 log_train_images: False
+#-------------------- Optimizer Configuration --------------------
+batch_size: 8
+n_classes: 4
+max_epochs: 30
+min_epochs: 5
+learning_rate: 0.001
+num_sanity_val_steps: 5
+#-------------------- Validation Configuration --------------------
 check_val_every_n_epoch : 3
+checkpoint_metric: Val Mean Dice
+checkpoint_metric_mode: max
+save_top_k: 1
+#-------------------- Other Configuration --------------------
+mode: sweep
+seed: 2334
+gpus: 1
+cpus: 0
+num_workers: 8
+accelerator: "ddp"
+output_path: /home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/checkpoints
+#-------------------- Debugging Configuration --------------------
+limit_train_batches: 0.15
+limit_val_batches: 0.15
+limit_test_batches: 0.15
 fast_dev_run: False
-
-limit_train_batches: 0.3 #for sweep
-limit_val_batches: 0.3
-limit_test_batches: 0.3
-
-learning_rate : 0.0001
-min_epochs : 5 #debugging
-max_epochs : 30 #debugging
-
-checkpoint_metric : Val Mean Dice
-checkpoint_metric_mode : max

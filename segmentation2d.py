@@ -16,7 +16,7 @@ class Segmentation2D(l.LightningModule):
     def __init__(self, hparams, model):
         super(Segmentation2D, self).__init__()
         self.save_hyperparameters(hparams) # Save hyperparameters in the hparams variable
-        self.new_device = torch.device("cuda" if torch.cuda.is_available() and hparams.gpus != 0 else "cpu")
+        self.new_device = torch.device("cuda" if torch.cuda.is_available() and hparams["gpus"] != 0 else "cpu")
         self.model = model
         self.model.to(self.new_device)
         init_weights(self.model, 'xavier')
@@ -32,14 +32,14 @@ class Segmentation2D(l.LightningModule):
         return output
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate, weight_decay=0)
+        optimizer = optim.Adam(self.parameters(), lr=self.hparams["learning_rate"], weight_decay=0)
 
         lr_scheduler = {'scheduler': optim.lr_scheduler.StepLR( optimizer, step_size=10, gamma=0.1)}
 
         return [optimizer], [lr_scheduler]
 
     def on_train_start(self):
-        seed_everything(self.hparams.seed)
+        seed_everything(self.hparams["seed"])
 
     def training_step(self, train_batch, batch_idx):
         #---- Get data ----#
@@ -54,7 +54,7 @@ class Segmentation2D(l.LightningModule):
         loss = self.loss(y_pred, y_true)
 
         #---- Log metrics ----#
-        if self.hparams.log_train_images:
+        if self.hparams["log_train_images"]:
             if batch_idx == 17 or batch_idx == 60 or batch_idx == 111 or batch_idx == 485:
                 display_2d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), train_batch['vol_idx'], phase='Training', epoch=True)
 
@@ -62,6 +62,8 @@ class Segmentation2D(l.LightningModule):
         diceloss_ggo = self.loss(y_pred[0, 2, :, :], y_true[0, 2, :, :])
         diceloss_consolidation = self.loss(y_pred[0, 3, :, :], y_true[0, 3, :, :])
         
+        current_lr = self.optimizers().param_groups[0]['lr']
+        self.log('learning_rate', current_lr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log('Train Dice Loss', loss, on_step=False, on_epoch=True)
         self.log('Train DiceLoss GGO', diceloss_ggo, on_step=False, on_epoch=True)
         self.log('Train DiceLoss consolidation', diceloss_consolidation, on_step=False, on_epoch=True)
@@ -127,7 +129,7 @@ class Segmentation2D(l.LightningModule):
         self.log('Val Dice GGO std', volume_stds.get('Diceval_GGO', default_value))
         self.log('Val Dice Consolidation std', volume_stds.get('Diceval_consolidation', default_value))
 
-        save_metrics(self.logger, self.hparams.output_path, self.hparams.out_channels, self.current_epoch,
+        save_metrics(self.logger, self.hparams["output_path"], self.hparams["n_classes"], self.current_epoch,
                      outputs=dice_per_patient, title='validation', boxplot=True, csv=True, formats=['svg'])
 
 
@@ -183,10 +185,4 @@ class Segmentation2D(l.LightningModule):
         self.log('Test Dice healthy lung std', volume_stds.get('Dicetest_healthy_lung', default_value))
         self.log('Test Dice GGO std', volume_stds.get('Dicetest_GGO', default_value))
         self.log('Test Dice Consolidation std', volume_stds.get('Dicetest_consolidation', default_value))
-        save_metrics(self.logger, self.hparams.output_path, self.hparams.out_channels, self.current_epoch, outputs=dice_per_patient, title='test', boxplot=True, csv=True, formats=['svg'])
-
-
-    @staticmethod
-    def add_module_specific_args(parser):
-        #specific_args = get_argparser_group(title="Module options", parser=parser)
-        return parser
+        save_metrics(self.logger, self.hparams["output_path"], self.hparams["n_classes"], self.current_epoch, outputs=dice_per_patient, title='test', boxplot=True, csv=True, formats=['svg'])

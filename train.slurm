@@ -28,10 +28,5 @@ source /home/guests/jorge_padilla/miniconda3/etc/profile.d/conda.sh
 conda deactivate # If you launch your script from a terminal where your environment is already loaded, conda won't activate the environment. This guards against that. Not necessary if you always run this script from a clean terminal
 conda activate FCDenseNet
 
-# Parameters
-CONFIG_FILE="config.yaml"
-DATA_ROOT="/home/guests/jorge_padilla/data/Longitudinal_Lung_Pathology/dyndata"
-OUTPUT_PATH="/home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/checkpoints"
-
 # Run the command
-python -u train.py --config $CONFIG_FILE --data_root=$DATA_ROOT --output_path=$OUTPUT_PATH
+python -u train.py

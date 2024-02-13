@@ -82,15 +82,15 @@ class FCDenseNet(l.LightningModule):
     def __init__(self, hparams):
         super(FCDenseNet, self).__init__()
         #parameters
-        self.up_blocks = hparams.up_blocks
+        self.up_blocks = hparams["up_blocks"]
         self.softmax = nn.Softmax2d()
 
-        self.in_channels = hparams.in_channels
-        self.down_blocks = hparams.down_blocks
-        self.bottleneck_layers = hparams.bottleneck_layers
-        self.growth_rate = hparams.growth_rate
-        self.out_chans_first_conv = hparams.out_chans_first_conv
-        self.n_classes = hparams.n_classes
+        self.in_channels = hparams["in_channels"]
+        self.down_blocks = hparams["down_blocks"]
+        self.bottleneck_layers = hparams["bottleneck_layers"]
+        self.growth_rate = hparams["growth_rate"]
+        self.out_chans_first_conv = hparams["out_chans_first_conv"]
+        self.n_classes = hparams["n_classes"]
 
 
         self.densenet_encoder = FCDenseNetEncoder(in_channels=self.in_channels, down_blocks=self.down_blocks,
@@ -107,15 +107,3 @@ class FCDenseNet(l.LightningModule):
         out1, skip_connections = self.densenet_encoder(x.type(torch.FloatTensor).to(device))
         out = self.decoder(out1, skip_connections)
         return out
-
-
-    @staticmethod
-    def add_model_specific_args(parser):
-        specific_args = get_argparser_group(title="Model options", parser=parser)
-        specific_args.add_argument('--down_blocks', type=tuple, default=(4, 4, 4, 4, 4))
-        specific_args.add_argument('--up_blocks', type=tuple, default=(4, 4, 4, 4, 4))
-        specific_args.add_argument('--bottleneck_layers', type=int, default=4)
-        specific_args.add_argument('--growth_rate', type=int, default=12)
-        specific_args.add_argument('--out_chans_first_conv', type=int, default=48)
-        specific_args.add_argument('--n_classes', type=int, default=4)
-        return parser
