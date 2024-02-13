@@ -66,30 +66,30 @@ class DynamicDataset2D(Dataset):
 
         ##Comment if not longitudinal
         # select subset for training and validation
-        if subset is not None and self.test == False:
-            self.unique_patients = self.df["split_patient"].unique()
-            self.df_new = self.base_df
-            self.base_df = self.df_new[self.df_new["pat_id"].isin(self.unique_patients)]
-            self.base_df = self.base_df.reset_index(drop=True)
-            self.base_df = self.base_df[self.base_df['base_patient'].isin(subset)]
-            self.base_df = self.base_df.reset_index(drop=True)
-            patientlist = self.base_df["base_patient"]
-            self.df = self.df[self.df["split_patient"].isin(patientlist)]
-            self.df = self.df.reset_index(drop=True)
+        #if subset is not None and self.test == False:
+        #    self.unique_patients = self.df["split_patient"].unique()
+        #    self.df_new = self.base_df
+        #    self.base_df = self.df_new[self.df_new["pat_id"].isin(self.unique_patients)]
+        #    self.base_df = self.base_df.reset_index(drop=True)
+        #    self.base_df = self.base_df[self.base_df['base_patient'].isin(subset)]
+        #    self.base_df = self.base_df.reset_index(drop=True)
+        #    patientlist = self.base_df["base_patient"]
+        #    self.df = self.df[self.df["split_patient"].isin(patientlist)]
+        #    self.df = self.df.reset_index(drop=True)
 
         # select subset for testing
-        if subset is not None and self.test:
-            self.unique_patients = self.df["split_patient"].unique()
-            self.df_new = self.base_df
-            self.base_df = self.df_new[self.df_new["base_patient"].isin(self.unique_patients)]
-            self.base_df = self.base_df.reset_index(drop=True)
-            self.base_df = self.base_df.loc[self.base_df["long_step"] == 0]
-            self.base_df = self.base_df.reset_index(drop=True)
-            self.base_df = self.base_df.loc[subset]
-            self.base_df = self.base_df.reset_index(drop=True)
-            patientlist = self.base_df["pat_id"]
-            self.df = self.df[self.df["pat_id"].isin(patientlist)]
-            self.df = self.df.reset_index(drop=True)
+        #if subset is not None and self.test:
+        #    self.unique_patients = self.df["split_patient"].unique()
+        #    self.df_new = self.base_df
+        #    self.base_df = self.df_new[self.df_new["base_patient"].isin(self.unique_patients)]
+        #    self.base_df = self.base_df.reset_index(drop=True)
+        #    self.base_df = self.base_df.loc[self.base_df["long_step"] == 0]
+        #    self.base_df = self.base_df.reset_index(drop=True)
+        #    self.base_df = self.base_df.loc[subset]
+        #    self.base_df = self.base_df.reset_index(drop=True)
+        #    patientlist = self.base_df["pat_id"]
+        #    self.df = self.df[self.df["pat_id"].isin(patientlist)]
+        #    self.df = self.df.reset_index(drop=True)
         ##
 
         self.max_dims = [self.df[f"dim{i}"].max() for i in range(3)]
@@ -134,16 +134,17 @@ class DynamicDataset2D(Dataset):
     def __getitem__(self, index):
         data_dict = self._get_slice_by_idx(index)
 
-        if self.transform2d is not None:
-            data_dict = self.transform2d(data_dict)
-        else:
-            data_dict = {k: torch.from_numpy(v) for k, v in data_dict.items()}
+        #if self.transform2d is not None:
+        #    data_dict = self.transform2d(data_dict)
+        #else:
+        #data_dict = {k: torch.from_numpy(v) for k, v in data_dict.items()}
 
-        data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(
-            dim=0), num_classes=len(self.labels)).permute(-1, 0, 1)
+        #data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(
+        #    dim=0), num_classes=len(self.labels)).permute(-1, 0, 1)
 
-        '''
-         if self.resize_images is not None and self.resize_labels is not None:
+        
+
+        if self.resize_images is not None and self.resize_labels is not None:
             data_dict = {k: torch.from_numpy(v) for k, v in data_dict.items()}
 
             if data_dict['image'].ndim == 2:
@@ -154,7 +155,6 @@ class DynamicDataset2D(Dataset):
                 data_dict['image'] = self.resize_images(data_dict['image'])
 
             if data_dict['label'].ndim == 2:
-                print("label is 2D")
                 data_dict['label'] = data_dict['label'].unsqueeze(dim=0).unsqueeze(dim=0)
                 data_dict['label'] = self.resize_labels(data_dict['label'])
                 if self.remove_pleural_effusion is not None:
@@ -162,9 +162,9 @@ class DynamicDataset2D(Dataset):
                     data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(dim=0), num_classes=4).permute(0, 3, 1, 2).squeeze(dim=0).squeeze(dim=0)
             else:
                 data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(dim=0), num_classes=5).permute(0, 3, 1, 2)
+
         else:
             data_dict = {k: torch.from_numpy(v) for k, v in data_dict.items()}
-        '''
 
        
         data_dict.update({'pat_id': self.get_pat_id_from_idx(index), 'vol_idx': self._get_vol_idx_from_idx(index)})
@@ -213,17 +213,17 @@ class DynamicDataset2D(Dataset):
         else:
             data = {}
             ##comment if longitudinal
-            identification_string = pat_id[-3:]
-            if identification_string in self.options:
-                pat_id = pat_id[:-3]
-            else:
-                identification_string = "_01"
+            #identification_string = pat_id[-3:]
+            #if identification_string in self.options:
+            #    pat_id = pat_id[:-3]
+            #else:
+            #    identification_string = "_01"
             ##
             
             for key in ["data", "seg"]:
-                #path = self.npy_path / (pat_id + "_" + key)
-                path = self.npy_path / \
-                    (pat_id + "_" + key + identification_string)
+                path = self.npy_path / (pat_id + "_" + key)
+                #path = self.npy_path / \
+                #    (pat_id + "_" + key + identification_string)
                 data[key] = self._load_npy(path)
             self.data[save_pat_id] = data
             data['image'] = data.pop("data")

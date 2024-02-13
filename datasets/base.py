@@ -1,13 +1,7 @@
-# Author: Matthias Keicher, CAMP @ Technical University of Munich
-# E-Mail: matthias.keicher@tum.de
-# vim: set ts=4 sw=4
-
-#import pytorch_lightning as pl
 import lightning as l
 from pathlib import Path
 from datasets.preprocessing_long_2D import DatasetPreprocessor
 from torch.utils.data import DataLoader
-
 
 class Base(l.LightningDataModule):
     def __init__(self, hparams):
@@ -58,6 +52,7 @@ class Base(l.LightningDataModule):
     def setup(self, stage=None):
         if self.fold_idxs is None:
             self.fold_idxs = self.get_split_idxs()
+        
         if stage == 'fit' or stage is None:
             for phase in ['train', 'val']:
                 self.datasets[phase] = self.get_dataset(subset=self.fold_idxs[phase], phase=phase)

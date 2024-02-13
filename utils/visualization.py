@@ -59,10 +59,10 @@ def display_2d_images(logger, label_list, current_epoch, batch_idx, x, y_pred, y
             axs[1, i + 1].grid(False)
         figure.tight_layout()
         if epoch:
-            logger.experiment[0].log({f'{phase} phase, Epoch: {current_epoch}, Batch: {batch_idx}, '
+            logger.experiment.log({f'{phase} phase, Epoch: {current_epoch}, Batch: {batch_idx}, '
                                       f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
         else:
-            logger.experiment[0].log({f'{phase} phase, Batch: {batch_idx}, '
+            logger.experiment.log({f'{phase} phase, Batch: {batch_idx}, '
                                       f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
         plt.close(figure)
 
@@ -112,10 +112,10 @@ def display_all_in_one(logger, current_epoch, batch_idx, x, x_ref, y_pred, y_tru
             axs[3].grid(False)
         figure.tight_layout()
         if epoch:
-            logger.experiment[0].log({f'{phase} phase, Epoch: {current_epoch}, Batch: {batch_idx}, '
+            logger.experiment.log({f'{phase} phase, Epoch: {current_epoch}, Batch: {batch_idx}, '
                                       f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
         else:
-            logger.experiment[0].log({
+            logger.experiment.log({
                                          f'{phase} phase, Batch: {batch_idx}, 'f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(
                                              figure)})
 
@@ -141,11 +141,11 @@ def display_long(logger, current_epoch, batch_idx, pat_id, x, x_ref, vol_idx, ph
 
         figure.tight_layout()
         if epoch:
-            logger.experiment[0].log(
+            logger.experiment.log(
                 {f'{phase} phase, Epoch: {current_epoch}, Batch: {batch_idx}, Pat_ID: {pat_id[sample]}'
                  f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
         else:
-            logger.experiment[0].log({f'{phase} phase, Batch: {batch_idx}, Pat_ID: {pat_id[sample]} '
+            logger.experiment.log({f'{phase} phase, Batch: {batch_idx}, Pat_ID: {pat_id[sample]} '
                                       f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
         plt.close(figure)
 

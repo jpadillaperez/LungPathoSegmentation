@@ -1,0 +1,14 @@
+method: bayes
+metric:
+  name: Val Mean Dice
+  goal: minimize
+parameters:
+  learning_rate:
+    min: 0.00001
+    max: 0.01
+    distribution: uniform
+early_terminate:
+  type: hyperband
+  min_iter: 5
+  max_iter: 30
+  

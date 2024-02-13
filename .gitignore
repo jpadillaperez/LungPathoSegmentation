@@ -1,6 +1,8 @@
 __pycache__/
 output/logs/*
 output/previous_logs/*
+output/checkpoints/*
+output/*
 wandb/
 *.pyc
 wandb_api_key.txt

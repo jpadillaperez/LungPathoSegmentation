@@ -32,7 +32,6 @@ def get_eval_means(outputs):
             means[key] = sum(valid_means) / len(valid_means) if len(valid_means) else None
 
         means = {k: v for k, v in means.items() if v is not None}
-        print(means)
         return means
 
 
@@ -82,8 +81,6 @@ def get_eval_means_per_patient(dice_dict):
         final_stds[key] = sum(valid_stds) / len(valid_stds) if len(valid_stds) else None
     final_means = {k: v for k, v in final_means.items() if v is not None}
     final_stds = {k: v for k, v in final_stds.items() if v is not None}
-    print(final_means)
-    print(final_stds)
     return final_means, final_stds, d_per_vol
 
 
@@ -98,7 +95,6 @@ def get_eval_std(outputs):
             stds[key] = np.std(valid_stds) if len(valid_stds) else None
 
         stds = {k: v for k, v in stds.items() if v is not None}
-        print(stds)
         return stds
 
 def get_dice_scores(metrics, phase,  pred, target, labels):

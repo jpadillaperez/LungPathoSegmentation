@@ -1,0 +1,26 @@
+mode: sweep
+#resume_from_checkpoint: /outputs/crogers/context_restoration/experiments/72129/checkpoints/epoch=32-Validation MSE Patch Loss=0.00.ckpt #specify path to pretrained model
+module : segmentation2d.Segmentation2D
+model :  models.fc_densenet.FCDenseNet
+dataset : datasets.covid.Segmentation2D
+dataset_config: config_patho.yml
+force_preprocessing: False
+
+batch_size : 8
+n_classes : 4
+seed: 2334
+log_every_n_steps : 1
+log_train_images: False
+check_val_every_n_epoch : 3
+fast_dev_run: False
+
+limit_train_batches: 0.3 #for sweep
+limit_val_batches: 0.3
+limit_test_batches: 0.3
+
+learning_rate : 0.0001
+min_epochs : 5 #debugging
+max_epochs : 30 #debugging
+
+checkpoint_metric : Val Mean Dice
+checkpoint_metric_mode : max

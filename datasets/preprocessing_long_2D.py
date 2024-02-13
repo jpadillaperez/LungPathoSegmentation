@@ -1,10 +1,3 @@
-"""
-Adapted from
-https://gitlab.lrz.de/CAMP_IFL/dynamic-dataset/dynamic-dataset/dynamic_dataset/datasets/dynamic/preprocessing_long.py
-See https://gitlab.lrz.de/CAMP_IFL/dynamic-dataset/-/tree/master
-on how to install and use the dynamic dataset.
-"""
-
 import os
 import yaml
 from pathlib import Path
@@ -37,8 +30,8 @@ class DatasetPreprocessor:
             verbose=True,
             seed=42
     ):
+    
         # load dataset config
-
         config_yml_path = Path(config_yml_path)
         assert config_yml_path.is_file(), f"config yaml could not be found at '{config_yml_path}', {os.curdir}"
         self.cfg = load_config_yaml(config_yml_path)
@@ -79,7 +72,8 @@ class DatasetPreprocessor:
         # load base patient dataframe
         self.df_path = self.pp_path / "base_df.csv"
         self.df = pd.read_csv(self.df_path)
-
+        self.base_df = self.df.copy()
+        
         if verbose:
             print(f"Dataframe loaded from {self.df_path}")
 
@@ -267,7 +261,6 @@ class DatasetPreprocessor:
         counts = {}
         for c, label in enumerate(self.cfg["labels"]):
             counts[label] = (seg == c).sum()
-
         return counts
 
     def _remap_channels(self, data):
@@ -285,6 +278,7 @@ class DatasetPreprocessor:
         for new_label_value, label_name in enumerate(self.cfg["labels"]):
             label_value = self.setup["labels"][labelmap][label_name]
             new_seg[seg == label_value] = new_label_value
+
         return new_seg
 
     def _normalize(self, data, mask):

@@ -32,7 +32,6 @@ class FCDenseNetEncoder(l.LightningModule):
 
     def forward(self, x):
         out = self.firstconv(x)
-
         skip_connections = []
         for i in range(len(self.down_blocks)):
             out = self.denseBlocksDown[i](out)
@@ -103,24 +102,20 @@ class FCDenseNet(l.LightningModule):
 
         self.decoder = FCDenseNetDecoder(prev_block_channels, skip_connection_channel_counts, self.growth_rate, self.n_classes, self.up_blocks)
 
-    def forward(self, x, device):
-        out1, skip_connections = self.densenet_encoder(
-            x.type(torch.FloatTensor).to(device))
-        out = self.decoder(out1, skip_connections)
 
+    def forward(self, x, device):
+        out1, skip_connections = self.densenet_encoder(x.type(torch.FloatTensor).to(device))
+        out = self.decoder(out1, skip_connections)
         return out
+
 
     @staticmethod
     def add_model_specific_args(parser):
-        specific_args = get_argparser_group(
-            title="Model options", parser=parser)
-        specific_args.add_argument(
-            '--down_blocks', type=tuple, default=(4, 4, 4, 4, 4))
-        specific_args.add_argument(
-            '--up_blocks', type=tuple, default=(4, 4, 4, 4, 4))
+        specific_args = get_argparser_group(title="Model options", parser=parser)
+        specific_args.add_argument('--down_blocks', type=tuple, default=(4, 4, 4, 4, 4))
+        specific_args.add_argument('--up_blocks', type=tuple, default=(4, 4, 4, 4, 4))
         specific_args.add_argument('--bottleneck_layers', type=int, default=4)
         specific_args.add_argument('--growth_rate', type=int, default=12)
-        specific_args.add_argument(
-            '--out_chans_first_conv', type=int, default=48)
+        specific_args.add_argument('--out_chans_first_conv', type=int, default=48)
         specific_args.add_argument('--n_classes', type=int, default=4)
         return parser

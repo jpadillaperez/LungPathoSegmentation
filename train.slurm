@@ -2,13 +2,14 @@
 #SBATCH --job-name=AUG-Patho  # Job name
 #SBATCH --output=./output/logs/Pathology_Segmentation-%A.out  # Standard output of the script (Can be absolute or relative path). %A adds the job id to the file name so you can launch the same script multiple times and get different logging files
 #SBATCH --error=./output/logs/Pathology_Segmentation-%A.err  # Standard error of the script
-#SBATCH --time=0-24:00:00  # Limit on the total run time (format: days-hours:minutes:seconds)
-#SBATCH --gres=gpu:1  # Number of GPUs if needed
-#SBATCH --cpus-per-task=1  # Number of CPUs (Don't use more than 12 per GPU)
-#SBATCH --mem=10G  # Memory in GB (Don't use more than 48G per GPU unless you absolutely need it and know what you are doing)
+#SBATCH --time=2-00:00:00  # Limit on the total run time (format: days-hours:minutes:seconds)
+#SBATCH --gres=gpu:RTX3090:1  # Number of GPUs (Don't use more than 1 unless you absolutely need it and know what you are doing)
+#SBATCH --cpus-per-task=8  # Number of CPUs (Don't use more than 12 per GPU)
+#SBATCH --mem=30G  # Memory in GB (Don't use more than 48G per GPU unless you absolutely need it and know what you are doing)
+# SBATCH --nodelist=ithor  # Node to run the job on (ithor or dagobah for 24Gb)
 
-CURRENT_LOG_DIR=/home/guests/jorge_padilla/code/Augsburg/Pathology_Segmentation/output/logs
-OLD_LOG_DIR=/home/guests/jorge_padilla/code/Augsburg/Pathology_Segmentation/output/logs/previous_logs
+CURRENT_LOG_DIR=/home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/logs
+OLD_LOG_DIR=/home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/logs/previous_logs
 
 # Move old logs to the new directory except for the current log file
 for file in $CURRENT_LOG_DIR/*.out $CURRENT_LOG_DIR/*.err; do
@@ -28,11 +29,9 @@ conda deactivate # If you launch your script from a terminal where your environm
 conda activate FCDenseNet
 
 # Parameters
-CONFIG_FILE="modules/segmentation_longitudinal/config/config_segmentation.yml"
-DATA_ROOT="/data/jorge_perez/dyndata"
-OUTPUT_PATH="/outputs/jorge_padilla/covidseg/experiments/"
-GPUS=1
-DEVICE="cuda"
+CONFIG_FILE="config.yaml"
+DATA_ROOT="/home/guests/jorge_padilla/data/Longitudinal_Lung_Pathology/dyndata"
+OUTPUT_PATH="/home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/checkpoints"
 
 # Run the command
-python -u train.py -c $CONFIG_FILE --data_root=$DATA_ROOT --gpus=$GPUS --output_path=$OUTPUT_PATH --force_preprocessing=False
+python -u train.py --config $CONFIG_FILE --data_root=$DATA_ROOT --output_path=$OUTPUT_PATH
