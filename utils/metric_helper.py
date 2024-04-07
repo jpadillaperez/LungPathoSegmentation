@@ -7,10 +7,9 @@ import wandb
 import seaborn as sns
 
 
-
 def calculate_mean_pathology_dice(dice):
         mean_pathology_dice = 0
-        list = ['Diceval_GGO', 'Diceval_consolidation']
+        list = ['Diceval_GGO', 'Diceval_consolidation', 'Diceval_pleural_effusion']
         count = 0
         for i in list:
             if dice[i] is not None:
@@ -137,7 +136,7 @@ def save_metrics(logger, output_path, out_channels, current_epoch, outputs, titl
             boxplot = sns.boxplot( data=df.T )
             #plt.show()
             boxplot.set_ylim([0., 1.])
-            boxplot.set_xticklabels(['Mean', 'Background', 'Healthy lung', 'GGO', 'Consolidation'])
+            boxplot.set_xticklabels(['Mean', 'Background', 'Healthy lung', 'GGO', 'Consolidation', 'Pleural effusion'])
             boxplot.set(xlabel="Class", ylabel="Dice score")
 
             boxplot.yaxis.set_major_locator(ticker.MultipleLocator(0.1))

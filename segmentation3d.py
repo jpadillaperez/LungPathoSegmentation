@@ -12,17 +12,15 @@ import torch.nn.functional as F
 from datasets.utils import init_weights
 
 
-class Segmentation2D(l.LightningModule):
+class Segmentation3D(l.LightningModule):
     def __init__(self, hparams, model):
-        super(Segmentation2D, self).__init__()
+        super(Segmentation3D, self).__init__()
         self.save_hyperparameters(hparams) # Save hyperparameters in the hparams variable
         self.new_device = torch.device("cuda" if torch.cuda.is_available() and hparams["gpus"] != 0 else "cpu")
         self.model = model
         self.model.to(self.new_device)
         init_weights(self.model, 'xavier')
-        #self.loss = DiceLoss()
-        self.loss = F.cross_entropy
-        self.softmax = nn.Softmax2d()
+        self.loss = DiceLoss(softmax=True)
         self.val_accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=hparams["n_classes"])
         self.test_accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=hparams["n_classes"])
         self.metrics = {'Diceval': DiceMetric(), 'Dicetest': DiceMetric()}
@@ -50,27 +48,27 @@ class Segmentation2D(l.LightningModule):
 
     def training_step(self, train_batch, batch_idx):
         #---- Get data ----#
-        #y_true = train_batch['label'].type(dtype=torch.long).to(self.new_device)
-        y_true = train_batch['label'].to(self.new_device).float()
+        y_true = train_batch['label'].type(dtype=torch.long).to(self.new_device)
         x = train_batch['image'].unsqueeze(1).to(self.new_device)
+
+        print(f"y_true shape: {y_true.shape}")
+        print(f"x shape: {x.shape}")
 
         #---- Forward pass ----#
         y_pred = self.forward(x)
-        #y_pred = self.softmax(y_pred)
 
         #---- Calculate loss ----#
-        #loss = self.loss(y_pred, y_true)
-        loss = self.loss(y_pred, y_true, weight = torch.tensor([1.0, 1.5, 1.5, 2.0, 5.0]).to(self.new_device))
+        loss = self.loss(y_pred, y_true)
 
         #---- Log metrics ----#
         if self.hparams["log_train_images"]:
             if batch_idx == 17 or batch_idx == 60 or batch_idx == 111 or batch_idx == 485:
-                display_2d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), train_batch['vol_idx'], phase='Training', epoch=True)
+                display_3d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), train_batch['vol_idx'], phase='Training', epoch=True)
 
-        diceloss_healthy = self.loss(y_pred[0, 1, :, :], y_true[0, 1, :, :])
-        diceloss_ggo = self.loss(y_pred[0, 2, :, :], y_true[0, 2, :, :])
-        diceloss_consolidation = self.loss(y_pred[0, 3, :, :], y_true[0, 3, :, :])
-        diceloss_pleural_effusion = self.loss(y_pred[0, 4, :, :], y_true[0, 4, :, :])
+        diceloss_healthy = self.loss(y_pred[0, 1, :, :, :], y_true[0, 1, :, :, :])
+        diceloss_ggo = self.loss(y_pred[0, 2, :, :, :], y_true[0, 2, :, :, :])
+        diceloss_consolidation = self.loss(y_pred[0, 3, :, :, :], y_true[0, 3, :, :, :])
+        diceloss_pleural_effusion = self.loss(y_pred[0, 4, :, :, :], y_true[0, 4, :, :, :])
         
         current_lr = self.optimizers().param_groups[0]['lr']
         self.log('learning_rate', current_lr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
@@ -86,17 +84,14 @@ class Segmentation2D(l.LightningModule):
 
     def validation_step(self, val_batch, batch_idx):
         #---- Get data ----#
-        #y_true = val_batch['label'].type(dtype=torch.long).to(self.new_device)
-        y_true = val_batch['label'].to(self.new_device).float()
+        y_true = val_batch['label'].type(dtype=torch.long).to(self.new_device)
         x = val_batch['image'].unsqueeze(dim=1).requires_grad_(False).to(self.new_device)
 
         #---- Forward pass ----#
         y_pred = self.forward(x)
-        y_pred = self.softmax(y_pred)
 
         #---- Calculate loss ----#
-        #val_loss = self.loss(y_pred, y_true)
-        val_loss = self.loss(y_pred, y_true, weight = torch.tensor([1.0, 1.5, 1.5, 2.0, 5.0]).to(self.new_device)).requires_grad_(False)
+        val_loss = self.loss(y_pred, y_true)
 
         #---- Calculate dice per patient ----#
         if batch_idx == 0:
@@ -113,7 +108,7 @@ class Segmentation2D(l.LightningModule):
 
         #---- Visualize ----#
         if batch_idx == 25:
-            display_2d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), val_batch['vol_idx'], phase='Validation')
+            display_3d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), val_batch['vol_idx'], phase='Validation')
 
         #---- Log metrics ----#
         self.log('Validation Dice Loss', val_loss.item(), on_step=False, on_epoch=True)
@@ -156,7 +151,6 @@ class Segmentation2D(l.LightningModule):
 
         #---- Forward pass ----#
         y_pred = self.forward(x)
-        y_pred = nn.Softmax2d()(y_pred)
 
         #---- Calculate Dice ----#
         if batch_idx == 0:
@@ -174,7 +168,7 @@ class Segmentation2D(l.LightningModule):
 
         #---- Visualize ----#
         if batch_idx == 63 or batch_idx == 967 or batch_idx == 838:
-            display_2d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), test_batch['vol_idx'], phase='Test')
+            display_3d_images(self.logger, self.label_list, self.current_epoch, batch_idx, x.cpu(), y_pred.cpu(), y_true.cpu(), test_batch['vol_idx'], phase='Test')
         
         #---- Log metrics ----#
         self.log('Test Accuracy', self.test_accuracy(y_pred, y_true.type(torch.IntTensor).to(self.new_device)), on_step=False, on_epoch=True)

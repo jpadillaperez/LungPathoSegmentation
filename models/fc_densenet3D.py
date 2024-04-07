@@ -78,7 +78,7 @@ class FCDenseNetDecoder(l.LightningModule):
         return out
 
 
-class FCDenseNet(l.LightningModule):
+class FCDenseNet3D(l.LightningModule):
     def __init__(self, hparams):
         super(FCDenseNet, self).__init__()
         #parameters

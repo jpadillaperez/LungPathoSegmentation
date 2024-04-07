@@ -147,21 +147,19 @@ class DynamicDataset2D(Dataset):
         if self.resize_images is not None and self.resize_labels is not None:
             data_dict = {k: torch.from_numpy(v) for k, v in data_dict.items()}
 
-            if data_dict['image'].ndim == 2:
-                data_dict['image'] = data_dict['image'].unsqueeze(dim=0).unsqueeze(dim=0)
-                data_dict['image'] = self.resize_images(data_dict['image'])
-                data_dict['image'] = data_dict['image'].squeeze(dim=0).squeeze(dim=0)
-            else:
-                data_dict['image'] = self.resize_images(data_dict['image'])
+            # resize images
+            data_dict['image'] = data_dict['image'].unsqueeze(dim=0).unsqueeze(dim=0)
+            data_dict['image'] = self.resize_images(data_dict['image'])
+            data_dict['image'] = data_dict['image'].squeeze(dim=0).squeeze(dim=0)
 
-            if data_dict['label'].ndim == 2:
-                data_dict['label'] = data_dict['label'].unsqueeze(dim=0).unsqueeze(dim=0)
-                data_dict['label'] = self.resize_labels(data_dict['label'])
-                if self.remove_pleural_effusion is not None:
-                    data_dict['label'] = self.remove_pleural_effusion(data_dict['label'])
-                    data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(dim=0), num_classes=4).permute(0, 3, 1, 2).squeeze(dim=0).squeeze(dim=0)
+            # resize labels
+            data_dict['label'] = data_dict['label'].unsqueeze(dim=0).unsqueeze(dim=0)
+            data_dict['label'] = self.resize_labels(data_dict['label'])
+            if self.remove_pleural_effusion is not None:
+                data_dict['label'] = self.remove_pleural_effusion(data_dict['label'])
+                data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(dim=0), num_classes=4).permute(0, 3, 1, 2).squeeze(dim=0).squeeze(dim=0)
             else:
-                data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(dim=0), num_classes=5).permute(0, 3, 1, 2)
+                data_dict['label'] = F.one_hot(data_dict['label'].long().squeeze(dim=0), num_classes=5).permute(0, 3, 1, 2).squeeze(dim=0).squeeze(dim=0)
 
         else:
             data_dict = {k: torch.from_numpy(v) for k, v in data_dict.items()}

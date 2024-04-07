@@ -4,6 +4,68 @@ import wandb
 from matplotlib import cm
 import matplotlib as mpl
 
+# 3D case: display all samples i.e. all volumes
+def display_3d_images(logger, label_list, current_epoch, batch_idx, x, y_pred, y_true, vol_idx, phase='', epoch=False):
+    no_labels = y_true.size()[1]
+    if no_labels == len(label_list):
+        cmap = cm.tab10
+        cmaplist = [cmap(i) for i in range(10)]
+        cmaplist.append((0, 0, 0, 1))
+
+        # create the new map
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', [cmaplist[index] for index in [10, 0]], 2)
+        cmap2 = mpl.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', [cmaplist[index] for index in [10, 1]], 2)
+        cmap3 = mpl.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', [cmaplist[index] for index in [10, 2]], 2)
+        cmap4 = mpl.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', [cmaplist[index] for index in [10, 3]], 2)
+        cmap5 = mpl.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', [cmaplist[index] for index in [10, 4]], 2)
+        cmap6 = mpl.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', [cmaplist[index] for index in [10, 5]], 2)
+
+        cmap_list = [cmap1, cmap2, cmap3, cmap4, cmap5, cmap6]
+        
+    plt.clf()
+    for sample in range(x.size()[0]):
+        figure, axs = plt.subplots(2, no_labels + 1, figsize=(12, 4))
+        # start with original CT
+        axs[0, 0].imshow(torch.rot90(x[sample, 0, :, :, x.size()[3] // 2], 1, [0, 1]), cmap='gray')
+        axs[0, 0].set_title('Original CT', fontsize=8)
+        axs[0, 0].set_xticks([])
+        axs[0, 0].set_yticks([])
+        axs[0, 0].set_ylabel('CT')
+        axs[0, 0].grid(False)
+        axs[1, 0].imshow(torch.rot90(x[sample, 0, :, :, x.size()[3] // 2], 1, [0, 1]), cmap='gray')
+        axs[1, 0].axis('off')
+        axs[1, 1].set_ylabel('Predictions')
+        axs[0, 1].set_ylabel('Ground Truths')
+        for i in range(no_labels):
+            # Plot ground truth
+            axs[0, i + 1].imshow(torch.rot90(y_true[sample, i, :, :, x.size()[3] // 2], 1, [0, 1]), cmap=cmap_list[i])
+            axs[0, i + 1].set_title(f'Label {i} ({label_list[i]})\nGround Truth ', fontsize=8)
+            axs[0, i + 1].set_xticks([])
+            axs[0, i + 1].set_yticks([])
+            axs[0, i + 1].grid(False)
+            # plot prediction
+            axs[1, i + 1].imshow(torch.rot90(torch.ge(y_pred, 0.5).float()[sample, i, :, :, x.size()[3] // 2], 1, [0, 1]),
+                                    cmap=cmap_list[i])
+            axs[1, i + 1].set_title(f'Label {i} ({label_list[i]})\nPrediction', fontsize=8)
+            axs[1, i + 1].set_xticks([])
+            axs[1, i + 1].set_yticks([])
+            axs[1, i + 1].grid(False)
+        figure.tight_layout()
+        if epoch:
+            logger.experiment.log({f'{phase} phase, Epoch: {current_epoch}, Batch: {batch_idx}, '
+                                      f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
+        else:
+            logger.experiment.log({f'{phase} phase, Batch: {batch_idx}, '
+                                      f'Sample {sample}, Volume ID {vol_idx[sample]}': wandb.Image(figure)})
+        plt.close(figure)
+
+        
 
 # 2D case: display all samples i.e. all slices
 def display_2d_images(logger, label_list, current_epoch, batch_idx, x, y_pred, y_true, vol_idx, phase='', epoch=False):

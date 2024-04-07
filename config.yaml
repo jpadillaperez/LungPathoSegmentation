@@ -1,51 +1,57 @@
 #-------------------- Module Configuration --------------------
-module: segmentation2d.Segmentation2D
+#module: segmentation2d.Segmentation2D
+module: segmentation3d.Segmentation3D
 #-------------------- Model Configuration --------------------
-model: models.fc_densenet.FCDenseNet
+#model: models.fc_densenet.FCDenseNet
+model: models.fc_densenet.FCDenseNet3D
 longitudinal: False
 in_channels: 1
-n_classes: 4
-down_blocks: [4, 4, 4, 4, 4]
-up_blocks: [4, 4, 4, 4, 4]
-bottleneck_layers: 4
+n_classes: 5 #4
+down_blocks: [5, 5, 5, 5, 5] #[4, 4, 4, 4, 4]
+up_blocks: [5, 5, 5, 5, 5] #[4, 4, 4, 4, 4]
+bottleneck_layers: 5 #4
 growth_rate: 12
 out_chans_first_conv: 48
 #-------------------- Dataset Configuration --------------------
 data_root: /home/guests/jorge_padilla/data/Longitudinal_Lung_Pathology/dyndata
-dataset: datasets.covid.Segmentation2D
+#dataset: datasets.covid.Segmentation2D
+dataset: datasets.covid.Segmentation3D
 dataset_config: config_patho.yml
 force_preprocessing: False
 plane: "axial"
 drop_pat_ids: []
+remove_pleural_effusion: False
 #-------------------- Training Configuration --------------------
 run_test: False
-resume_from_checkpoint: null
+#resume_from_checkpoint: /home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/checkpoints/240405-011535_Segmentation2D_Segmentation2D_models_fc_densenet_FCDenseNet/last.ckpt
+resume_from_checkpoint: False
 log_every_n_steps: 50
 pixel_threshold: 0.025
 overfit_batches: 0.0
 log_train_images: False
+lr_scheduler: "ReduceLROnPlateau"
 #-------------------- Optimizer Configuration --------------------
-batch_size: 8
-n_classes: 4
-max_epochs: 30
+batch_size: 1 #16
+max_epochs: 900
 min_epochs: 5
 learning_rate: 0.001
 num_sanity_val_steps: 5
 #-------------------- Validation Configuration --------------------
-check_val_every_n_epoch : 3
+check_val_every_n_epoch : 5
 checkpoint_metric: Val Mean Dice
 checkpoint_metric_mode: max
 save_top_k: 1
 #-------------------- Other Configuration --------------------
-mode: sweep
+mode: train # sweep, train, test
 seed: 2334
 gpus: 1
 cpus: 0
-num_workers: 8
+num_workers: 1
 accelerator: "ddp"
 output_path: /home/guests/jorge_padilla/code/Augsburg/LungPathoSegmentation/output/checkpoints
 #-------------------- Debugging Configuration --------------------
 limit_train_batches: 0.15
-limit_val_batches: 0.15
+limit_val_batches: 0.25
+#limit_val_batches: 0.15
 limit_test_batches: 0.15
 fast_dev_run: False
