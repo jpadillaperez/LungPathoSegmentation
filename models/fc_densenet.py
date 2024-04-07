@@ -83,8 +83,6 @@ class FCDenseNet(l.LightningModule):
         super(FCDenseNet, self).__init__()
         #parameters
         self.up_blocks = hparams["up_blocks"]
-        self.softmax = nn.Softmax2d()
-
         self.in_channels = hparams["in_channels"]
         self.down_blocks = hparams["down_blocks"]
         self.bottleneck_layers = hparams["bottleneck_layers"]

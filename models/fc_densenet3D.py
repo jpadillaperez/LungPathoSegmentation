@@ -15,18 +15,18 @@ class FCDenseNetEncoder(l.LightningModule):
         self.down_blocks = down_blocks
         self.skip_connection_channel_counts = []
         self.has_bottle_neck = True if bottleneck_layers>0 else False
-        self.firstconv = nn.Conv2d(in_channels, out_chans_first_conv, kernel_size=3, stride=1, padding=1, bias=True)
+        self.firstconv = nn.Conv3d(in_channels, out_chans_first_conv, kernel_size=3, stride=1, padding=1, bias=True)
         self.cur_channels_count = out_chans_first_conv
 
         self.denseBlocksDown = nn.ModuleList([])
         self.transDownBlocks = nn.ModuleList([])
         for i in range(len(down_blocks)):
-            self.denseBlocksDown.append(DenseBlock(self.cur_channels_count, growth_rate, down_blocks[i]))
+            self.denseBlocksDown.append(DenseBlock3D(self.cur_channels_count, growth_rate, down_blocks[i]))
             self.cur_channels_count += (growth_rate * down_blocks[i])
             self.skip_connection_channel_counts.insert(0, self.cur_channels_count)
             self.transDownBlocks.append(TransitionDown(self.cur_channels_count))
         if self.has_bottle_neck:
-            self.bottleneck = Bottleneck(self.cur_channels_count, growth_rate, bottleneck_layers)
+            self.bottleneck = Bottleneck3D(self.cur_channels_count, growth_rate, bottleneck_layers)
         self.prev_block_channels = growth_rate * bottleneck_layers
         self.cur_channels_count += self.prev_block_channels
 
@@ -53,17 +53,17 @@ class FCDenseNetDecoder(l.LightningModule):
             self.transUpBlocks.append(TransitionUp(prev_block_channels, prev_block_channels))
             cur_channels_count = prev_block_channels + skip_connection_channel_counts[i]
 
-            self.denseBlocksUp.append(DenseBlock(cur_channels_count, growth_rate, self.up_blocks[i], upsample=True))
+            self.denseBlocksUp.append(DenseBlock3D(cur_channels_count, growth_rate, self.up_blocks[i], upsample=True))
             prev_block_channels = growth_rate * self.up_blocks[i]
             cur_channels_count += prev_block_channels
 
         self.transUpBlocks.append(TransitionUp(prev_block_channels, prev_block_channels))
         cur_channels_count = prev_block_channels + skip_connection_channel_counts[-1]
-        self.denseBlocksUp.append(DenseBlock(cur_channels_count, growth_rate, self.up_blocks[-1], upsample=False))
+        self.denseBlocksUp.append(DenseBlock3D(cur_channels_count, growth_rate, self.up_blocks[-1], upsample=False))
         cur_channels_count += growth_rate * self.up_blocks[-1]
 
-        self.finalConv = nn.Conv2d(in_channels=cur_channels_count, out_channels=n_classes, kernel_size=1, stride=1, padding=0, bias=True)
-        self.softmax = nn.Softmax2d()
+        self.finalConv = nn.Conv3d(in_channels=cur_channels_count, out_channels=n_classes, kernel_size=1, stride=1, padding=0, bias=True)
+        self.softmax = nn.Softmax()
 
     def forward(self, out, skip_connections):
         for i in range(len(self.up_blocks)):
@@ -80,11 +80,9 @@ class FCDenseNetDecoder(l.LightningModule):
 
 class FCDenseNet3D(l.LightningModule):
     def __init__(self, hparams):
-        super(FCDenseNet, self).__init__()
+        super(FCDenseNet3D, self).__init__()
         #parameters
         self.up_blocks = hparams["up_blocks"]
-        self.softmax = nn.Softmax2d()
-
         self.in_channels = hparams["in_channels"]
         self.down_blocks = hparams["down_blocks"]
         self.bottleneck_layers = hparams["bottleneck_layers"]

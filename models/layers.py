@@ -98,3 +98,46 @@ def center_crop(layer, max_height, max_width):
     xy1 = (w - max_width) // 2
     xy2 = (h - max_height) // 2
     return layer[:, :, xy2:(xy2 + max_height), xy1:(xy1 + max_width)]
+
+
+
+class DenseLayer3D(nn.Sequential):
+    def __init__(self, in_channels, growth_rate):
+        super().__init__()
+        self.add_module('norm', nn.BatchNorm3d(in_channels))
+        self.add_module('relu', nn.ReLU(True))
+        #self.add_module('elu', nn.ELU())
+        self.add_module('conv', nn.Conv3d(in_channels, growth_rate, kernel_size=3, stride=1, padding=1, bias=True))
+        self.add_module('drop', nn.Dropout3d(0.3))
+
+    def forward(self, x):
+        return super().forward(x)
+    
+
+class DenseBlock3D(nn.Module):
+    def __init__(self, in_channels, growth_rate, n_layers, upsample=False):
+        super().__init__()
+        self.upsample = upsample
+        self.layers = nn.ModuleList([DenseLayer3D(in_channels + i * growth_rate, growth_rate) for i in range(n_layers)])
+
+    def forward(self, x):
+        if self.upsample:
+            new_features = []
+            for layer in self.layers:
+                out = layer(x)
+                x = torch.cat([x, out], 1)
+                new_features.append(out)
+            return torch.cat(new_features, 1)
+        else:
+            for layer in self.layers:
+                out = layer(x)
+                x = torch.cat([x, out], 1)
+            return x
+
+class Bottleneck3D(nn.Sequential):
+    def __init__(self, in_channels, growth_rate, n_layers):
+        super().__init__()
+        self.add_module('bottleneck', DenseBlock3D(in_channels, growth_rate, n_layers, upsample=True))
+
+    def forward(self, x):
+        return super().forward(x)
