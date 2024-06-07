@@ -9,11 +9,19 @@ class ConfusionMetric:
         target = target.float()
         pred = pred.float()
 
-        # get conditions
-        tp = einsum("bcxy, bcxy->c", pred, target)
-        fp = einsum("bcxy, bcxy->c", pred, (1 - target))
-        fn = einsum("bcxy, bcxy->c", (1 - pred), target)
-        tn = einsum("bcxy, bcxy->c", pred, (1 - target))
+        # Determine the input dimensions
+        if target.dim() == 4:  # 2D input
+            tp = torch.einsum("bcxy, bcxy->c", pred, target)
+            fp = torch.einsum("bcxy, bcxy->c", pred, (1 - target))
+            fn = torch.einsum("bcxy, bcxy->c", (1 - pred), target)
+            tn = torch.einsum("bcxy, bcxy->c", pred, (1 - target))
+        elif target.dim() == 5:  # 3D input
+            tp = torch.einsum("bchwd, bchwd->c", pred, target)
+            fp = torch.einsum("bchwd, bchwd->c", pred, (1 - target))
+            fn = torch.einsum("bchwd, bchwd->c", (1 - pred), target)
+            tn = torch.einsum("bchwd, bchwd->c", pred, (1 - target))
+        else:
+            raise ValueError("Invalid input shape. Expected 4D (2D) or 5D (3D) tensors.")
 
         return tp, fp, fn, tn
 

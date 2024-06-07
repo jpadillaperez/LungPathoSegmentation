@@ -11,7 +11,6 @@ import numpy as np
 import torch.nn.functional as F
 from datasets.utils import init_weights
 
-
 class Segmentation3D(l.LightningModule):
     def __init__(self, hparams, model):
         super(Segmentation3D, self).__init__()
@@ -49,10 +48,8 @@ class Segmentation3D(l.LightningModule):
     def training_step(self, train_batch, batch_idx):
         #---- Get data ----#
         y_true = train_batch['label'].type(dtype=torch.long).to(self.new_device)
-        x = train_batch['image'].unsqueeze(1).to(self.new_device)
-
-        print(f"y_true shape: {y_true.shape}")
-        print(f"x shape: {x.shape}")
+        #x = train_batch['image'].unsqueeze(1).to(self.new_device)
+        x = train_batch['image'].to(self.new_device).to(torch.int16)
 
         #---- Forward pass ----#
         y_pred = self.forward(x)
@@ -83,9 +80,11 @@ class Segmentation3D(l.LightningModule):
 #-----------------VALIDATION-----------------#
 
     def validation_step(self, val_batch, batch_idx):
+
         #---- Get data ----#
         y_true = val_batch['label'].type(dtype=torch.long).to(self.new_device)
-        x = val_batch['image'].unsqueeze(dim=1).requires_grad_(False).to(self.new_device)
+        #x = val_batch['image'].unsqueeze(dim=1).requires_grad_(False).to(self.new_device)
+        x = val_batch['image'].requires_grad_(False).to(self.new_device)
 
         #---- Forward pass ----#
         y_pred = self.forward(x)

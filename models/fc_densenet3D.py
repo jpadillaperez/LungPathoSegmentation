@@ -24,7 +24,7 @@ class FCDenseNetEncoder(l.LightningModule):
             self.denseBlocksDown.append(DenseBlock3D(self.cur_channels_count, growth_rate, down_blocks[i]))
             self.cur_channels_count += (growth_rate * down_blocks[i])
             self.skip_connection_channel_counts.insert(0, self.cur_channels_count)
-            self.transDownBlocks.append(TransitionDown(self.cur_channels_count))
+            self.transDownBlocks.append(TransitionDown3D(self.cur_channels_count))
         if self.has_bottle_neck:
             self.bottleneck = Bottleneck3D(self.cur_channels_count, growth_rate, bottleneck_layers)
         self.prev_block_channels = growth_rate * bottleneck_layers
@@ -37,6 +37,7 @@ class FCDenseNetEncoder(l.LightningModule):
             out = self.denseBlocksDown[i](out)
             skip_connections.append(out)
             out = self.transDownBlocks[i](out)
+            print(f"Encoder out Shape: {out.shape}")
         if self.has_bottle_neck:
             out = self.bottleneck(out)
         return out, skip_connections
@@ -50,14 +51,14 @@ class FCDenseNetDecoder(l.LightningModule):
         self.transUpBlocks = nn.ModuleList([])
         self.denseBlocksUp = nn.ModuleList([])
         for i in range(len(self.up_blocks) - 1):
-            self.transUpBlocks.append(TransitionUp(prev_block_channels, prev_block_channels))
+            self.transUpBlocks.append(TransitionUp3D(prev_block_channels, prev_block_channels))
             cur_channels_count = prev_block_channels + skip_connection_channel_counts[i]
 
             self.denseBlocksUp.append(DenseBlock3D(cur_channels_count, growth_rate, self.up_blocks[i], upsample=True))
             prev_block_channels = growth_rate * self.up_blocks[i]
             cur_channels_count += prev_block_channels
 
-        self.transUpBlocks.append(TransitionUp(prev_block_channels, prev_block_channels))
+        self.transUpBlocks.append(TransitionUp3D(prev_block_channels, prev_block_channels))
         cur_channels_count = prev_block_channels + skip_connection_channel_counts[-1]
         self.denseBlocksUp.append(DenseBlock3D(cur_channels_count, growth_rate, self.up_blocks[-1], upsample=False))
         cur_channels_count += growth_rate * self.up_blocks[-1]
@@ -70,6 +71,7 @@ class FCDenseNetDecoder(l.LightningModule):
             skip = skip_connections[-i - 1]
             out = self.transUpBlocks[i](out, skip)
             out = self.denseBlocksUp[i](out)
+            print(f"Decoder out Shape: {out.shape}")
 
         out = self.finalConv(out)
         if self.apply_softmax:

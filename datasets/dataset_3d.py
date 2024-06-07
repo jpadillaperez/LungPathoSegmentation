@@ -82,16 +82,12 @@ class DynamicDataset3D(Dataset):
 
             # resize images
             data_dict['image'] = data_dict['image'].unsqueeze(dim=0).unsqueeze(dim=0)
-            print(f"Image size: {data_dict['image'].shape}")
             data_dict['image'] = self.resize_images(data_dict['image'])
-            print(f"Image size: {data_dict['image'].shape}")
-            data_dict['image'] = data_dict['image'].squeeze(dim=0).squeeze(dim=0)
+            data_dict['image'] = data_dict['image'].squeeze(dim=0)#.squeeze(dim=0)
 
             # resize labels
             data_dict['label'] = data_dict['label'].unsqueeze(dim=0).unsqueeze(dim=0)
-            print(f"Label size: {data_dict['label'].shape}")
             data_dict['label'] = self.resize_labels(data_dict['label'])
-            print(f"Label size: {data_dict['label'].shape}")
             data_dict['label'] = data_dict['label'].squeeze(dim=0).squeeze(dim=0)
 
             if self.remove_pleural_effusion is not None:

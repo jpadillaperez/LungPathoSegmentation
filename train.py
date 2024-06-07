@@ -19,7 +19,8 @@ print('Number of CPU threads: {}'.format(torch.get_num_threads()))
 torch.cuda.empty_cache()
 #torch.multiprocessing.set_sharing_strategy('file_system')
 #torch.set_float32_matmul_precision('medium')
-torch.set_grad_enabled(True)
+torch.use_deterministic_algorithms(mode=True, warn_only=True)
+#torch.set_grad_enabled(True)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
@@ -94,7 +95,7 @@ def train():
         max_epochs=hparams["max_epochs"],
         callbacks=[checkpoint_callback],
         #weights_summary='full',
-        deterministic=True,
+        #deterministic=True,
         num_sanity_val_steps=hparams["num_sanity_val_steps"],
         log_every_n_steps=hparams["log_every_n_steps"],
         check_val_every_n_epoch=hparams["check_val_every_n_epoch"],

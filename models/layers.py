@@ -134,6 +134,33 @@ class DenseBlock3D(nn.Module):
                 x = torch.cat([x, out], 1)
             return x
 
+
+class TransitionDown3D(nn.Sequential):
+    def __init__(self, in_channels):
+        super().__init__()
+        self.add_module('norm', nn.BatchNorm3d(num_features=in_channels))
+        self.add_module('relu', nn.ReLU(inplace=True))
+        self.add_module('conv', nn.Conv3d(in_channels, in_channels, kernel_size=1, stride=1, padding=0, bias=True))
+        self.add_module('drop', nn.Dropout3d(0.2))
+        self.add_module('maxpool', nn.MaxPool3d(2))
+
+    def forward(self, x):
+        return super().forward(x)
+
+
+class TransitionUp3D(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.convTrans = nn.ConvTranspose3d(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=2, padding=0, bias=True)
+
+    def forward(self, x, skip_x):
+        out = self.convTrans(x)
+        out = center_crop_3d(out, skip_x.size(2), skip_x.size(3))
+        out = torch.cat([out, skip_x], 1)
+        return out
+
+
+
 class Bottleneck3D(nn.Sequential):
     def __init__(self, in_channels, growth_rate, n_layers):
         super().__init__()
@@ -141,3 +168,11 @@ class Bottleneck3D(nn.Sequential):
 
     def forward(self, x):
         return super().forward(x)
+
+
+def center_crop_3d(layer, max_height, max_width):
+    _, _, h, w, d = layer.size()
+    xy1 = (w - max_width) // 2
+    xy2 = (h - max_height) // 2
+    xy3 = (d - max_height) // 2
+    return layer[:, :, xy2:(xy2 + max_height), xy1:(xy1 + max_width), xy3:(xy3 + max_width)]
